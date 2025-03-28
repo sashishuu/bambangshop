@@ -13,3 +13,25 @@
 2. If we only use the `Model`, all logic—including data manipulation and business rules—would be tightly coupled inside it. This creates high complexity and low cohesion. For example, managing `Program`, `Subscriber`, and `Notification` interactions in a single struct would make the model bloated and hard to manage. Adding or changing functionality in one model would risk introducing bugs into unrelated parts. Separating logic reduces interdependency and simplifies the codebase.
 
 3. Postman is an extremely helpful tool for testing HTTP endpoints. It allows us to simulate client requests without writing a frontend. In this project, we used Postman to test our `subscribe` and `unsubscribe` endpoints by sending raw JSON requests and inspecting the responses. Postman’s ability to save collections, write tests, and chain requests is especially useful for teamwork and automation. We plan to use it in our Group Project for testing auth flows and complex multi-step API sequences.
+
+### Reflection Publisher-3
+
+1. In this tutorial, we use the **Push model** of the Observer Pattern, where the **publisher actively sends** data (notifications) to subscribers. When a product is created, promoted, or deleted, the system calls `NotificationService::notify`, which immediately sends HTTP POST requests to each subscriber’s URL.
+
+2. If we used the **Pull model** instead, subscribers would be responsible for periodically requesting updates from the publisher.  
+   - **Advantages of Pull**:
+     - Subscribers can control how often they fetch updates (more flexible).
+     - Less load on publisher since it doesn’t need to notify all.
+   - **Disadvantages of Pull**:
+     - Delayed notification (not real-time).
+     - Increased complexity on the subscriber side.
+     - Redundant or unnecessary polling.
+
+   In this case, the Push model is better because we need real-time delivery of product notifications to subscribers without them having to request updates manually.
+
+3. Without **multi-threading**, the notification process would become **blocking and sequential**. This means:
+   - Each subscriber's HTTP request would have to wait for the previous one to finish.
+   - If one subscriber is slow or unresponsive, it will **delay notifications** for others.
+   - Overall, the system becomes inefficient and may even appear frozen during high-load scenarios.
+
+   By using multi-threading (with `thread::spawn`), we send notifications **concurrently**, ensuring fast and non-blocking execution of all updates.
