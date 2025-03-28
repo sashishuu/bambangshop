@@ -1,3 +1,12 @@
+pub fn create(mut product: Product) -> Result<Product> {
+    product.product_type = product.product_type.to_uppercase();
+    let product_result: Product = ProductRepository::add(product);
+
+    NotificationService::notify(&product_result.product_type, "CREATED", product_result.clone());
+
+    return Ok(product_result);
+}
+
 pub fn publish(id: usize) -> Result<Product> {
     let product_opt: Option<Product> = ProductRepository::get_by_id(id);
     if product_opt.is_none() {
@@ -9,5 +18,22 @@ pub fn publish(id: usize) -> Result<Product> {
 
     let product: Product = product_opt.unwrap();
     NotificationService::notify(&product.product_type, "PROMOTION", product.clone());
+    NotificationService::notify(&product_result.product_type, "CREATED", product_result.clone());
     return Ok(product);
 }
+
+pub fn delete(id: usize) -> Result<Json<Product>> {
+    let product_opt: Option<Product> = ProductRepository::delete(id);
+    if product_opt.is_none() {
+        return Err(compose_error_response(
+            Status::NotFound,
+            String::from("Product not found.")
+        ));
+    }
+
+    let product: Product = product_opt.unwrap();
+    NotificationService::notify(&product.product_type, "DELETED", product.clone());
+
+    return Ok(Json::from(product));
+}
+
